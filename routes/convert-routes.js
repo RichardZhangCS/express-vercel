@@ -4,7 +4,6 @@ var multer = require("multer");
 var path = require("path");
 const fs = require("fs");
 const { fromPath } = require("pdf2pic");
-const pdf = require("pdf-poppler");
 const csvToJson = require("convert-csv-to-json");
 var { zip } = require("zip-a-folder");
 
@@ -47,6 +46,7 @@ router.post("/img/pdf", upload.single("file"), async (req, res, next) => {
 /*router.post("/pdf/img/jpg", (req, res) => {
   res.send("yay");
 });*/
+const { Poppler } = require("node-poppler");
 
 router.post(
   "/pdf/img/:imgtype",
@@ -66,10 +66,27 @@ router.post(
     }
 
     let inputFile = path.join(__dirname, "..", "/uploads/file.pdf");
-    console.log(inputFile);
+
+    const poppler = new Poppler();
+    const options = {};
+    if (req.params.imgtype == "png") {
+      options.pngFile = true;
+    } else {
+      options.jpegFile = true;
+    }
+    const outputFile = `test_document.png`;
 
     fs.rmdirSync("downloads", { recursive: true });
     fs.mkdirSync("downloads");
+
+    const result = await poppler.pdfToCairo(
+      inputFile,
+      path.join(__dirname, "..", "/downloads", "/" + originalName),
+      options
+    );
+    console.log(path.join(__dirname, "..", "/downloads"));
+
+    console.log(result);
 
     let opts = {
       format: req.params.imgtype,
@@ -78,7 +95,6 @@ router.post(
       page: null,
     };
     try {
-      await pdf.convert(inputFile, opts);
       await zipDirectory("downloads", "downloads.zip");
     } catch (e) {
       console.error(e);
