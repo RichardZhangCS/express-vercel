@@ -2,10 +2,12 @@ const express = require("express");
 const app = express();
 const product = require("./api/product");
 const path = require("path");
+const cors = require("cors");
 const convertRouter = require("./routes/convert-routes");
 
 app.use(express.json({ extended: false }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 app.use("/convert", convertRouter);
 
 app.use("/api/product", product);
